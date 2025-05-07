@@ -67,12 +67,19 @@ mark_as_advanced(OPENCL_LIBRARIES)
 if(NOT OPENCL_INCLUDE_DIRS)
     message(STATUS "Could NOT find 'OpenCL/cl.h' or 'CL/cl.h', install OpenCL or set OPENCL_ROOT")
 endif()
-if(NOT OPENCL_LIBRARIES)
-    message(STATUS "Could NOT find OpenCL library, install it or set OPENCL_ROOT")
+
+if(NOT ANDROID)
+  if(NOT OPENCL_LIBRARIES)
+      message(STATUS "Could NOT find OpenCL library, install it or set OPENCL_ROOT")
+  endif()
 endif()
 
 # Determines whether or not OpenCL was found
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(OpenCL DEFAULT_MSG OPENCL_INCLUDE_DIRS OPENCL_LIBRARIES)
+if(NOT ANDROID)
+  find_package_handle_standard_args(OpenCL DEFAULT_MSG OPENCL_INCLUDE_DIRS OPENCL_LIBRARIES)
+else()
+  find_package_handle_standard_args(OpenCL DEFAULT_MSG OPENCL_INCLUDE_DIRS)
+endif()
 
 # ==================================================================================================

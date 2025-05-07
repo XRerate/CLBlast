@@ -53,6 +53,8 @@
 #define CL_USE_DEPRECATED_OPENCL_2_0_APIS // to disable deprecation warnings
 #if defined(__APPLE__) || defined(__MACOSX)
   #include <OpenCL/opencl.h>
+#elif defined(ANDROID)
+  #include "stub.hpp"
 #else
   #include <CL/opencl.h>
 #endif
@@ -162,10 +164,12 @@ class Platform {
  public:
 
   // Constructor based on the regular OpenCL data-type
-  explicit Platform(const cl_platform_id platform): platform_(platform) { }
+  explicit Platform(const cl_platform_id platform): platform_(platform) {}
 
   // Initializes the platform
   explicit Platform(const size_t platform_id) {
+    LoadOpenCL();
+    
     auto num_platforms = cl_uint{0};
     CheckError(clGetPlatformIDs(0, nullptr, &num_platforms));
     if (num_platforms == 0) {

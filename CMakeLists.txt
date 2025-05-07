@@ -38,6 +38,7 @@ option(TUNERS "Enable compilation of the tuners" ON)
 option(CLIENTS "Enable compilation of the clients to test and compare performance" OFF)
 option(TESTS "Enable compilation of the correctness tests" OFF)
 option(CUBLAS "Enables performance comparison against cuBLAS on NVIDIA GPUs" OFF)
+option(ANDROID "Enable compilation for Android" ON)
 
 # The optional Netlib API for CLBlast
 option(NETLIB "Enable compilation of the CBLAS Netlib API" OFF)
@@ -78,6 +79,12 @@ option(VERBOSE "Compile in verbose mode for additional diagnostic messages" OFF)
 if(VERBOSE)
   message("-- Building in verbose mode")
   add_definitions(-DVERBOSE)
+endif()
+
+if(ANDROID)
+  message("-- Building CLBlast for Android")
+  add_definitions(-DANDROID)
+  set(CMAKE_SYSTEM_NAME Android)
 endif()
 
 # ==================================================================================================
@@ -169,8 +176,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${clblast_SOURCE_DIR}/cmake/Modules/
 if(OPENCL)
   # Requires OpenCL. It is found through the included "FindOpenCL.cmake" in CMAKE_MODULE_PATH.
   find_package(OpenCL REQUIRED)
-  set(API_LIBRARIES ${OPENCL_LIBRARIES})
+  if(NOT ANDROID)
+    set(API_LIBRARIES ${OPENCL_LIBRARIES})
+  endif()
+
   set(API_INCLUDE_DIRS ${OPENCL_INCLUDE_DIRS})
+  message(STATUS "OpenCL include directories: ${API_INCLUDE_DIRS}")
 elseif(CUDA)
   # For CUDA, the "FindCUDA.cmake" is part of CMake
   find_package(CUDA REQUIRED)
@@ -286,8 +297,8 @@ set(HEADERS  # such that they can be discovered by IDEs such as CLion and Visual
   src/tuning/routines/routine_tuner.hpp
 )
 if(OPENCL)
-  set(SOURCES ${SOURCES} src/clblast.cpp src/clblast_c.cpp src/tuning/tuning_api.cpp)
-  set(HEADERS ${HEADERS} include/clblast.h include/clblast_c.h src/clpp11.hpp)
+  set(SOURCES ${SOURCES} src/clblast.cpp src/clblast_c.cpp src/tuning/tuning_api.cpp src/stub.cpp)
+  set(HEADERS ${HEADERS} include/clblast.h include/clblast_c.h src/clpp11.hpp src/stub.hpp)
   if(NETLIB)
     set(SOURCES ${SOURCES} src/clblast_netlib_c.cpp)
     set(HEADERS ${HEADERS} include/clblast_netlib_c.h)
@@ -417,7 +428,8 @@ if(TUNERS)
       src/utilities/utilities.cpp
       src/tuning/configurations.cpp
       src/tuning/tuning.cpp
-      src/kernel_preprocessor.cpp)
+      src/kernel_preprocessor.cpp
+      src/stub.cpp)
   set(TUNERS_HEADERS  # such that they can be discovered by IDEs such as CLion and Visual Studio
       src/utilities/compile.hpp
       src/utilities/clblast_exceptions.hpp
@@ -426,7 +438,8 @@ if(TUNERS)
       src/tuning/configurations.hpp
       src/tuning/tuning.hpp
       src/tuning/routines/routine_tuner.hpp
-      src/kernel_preprocessor.hpp)
+      src/kernel_preprocessor.hpp
+      src/stub.hpp)
   set(TUNERS_COMMON ${TUNERS_COMMON} ${TUNERS_HEADERS})
 
   # Creates a library with common sources for all tuners
